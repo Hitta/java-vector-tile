@@ -49,8 +49,6 @@ public class VectorTileEncoder {
     private final int extent;
 
     private final Geometry clipGeometry;
-
-    private final Geometry polygonClipGeometry;
     
     private final boolean autoScale;
 
@@ -76,27 +74,26 @@ public class VectorTileEncoder {
      * The extent value control how detailed the coordinates are encoded in the
      * vector tile. 4096 is a good default, 256 can be used to reduce density.
      * <p>
-     * The polygon clip buffer value control how large the clipping area is
-     * outside of the tile for polygons. 0 means that the clipping is done at
+     * The clip buffer value control how large the clipping area is
+     * outside of the tile. 0 means that the clipping is done at
      * the tile border. 8 is a good default.
      * 
      * @param extent
      *            a int with extent value. 4096 is a good value.
-     * @param polygonClipBuffer
-     *            a int with clip buffer size for polygons. 8 is a good value.
+     * @param clipBuffer
+     *            a int with clip buffer size. 8 is a good value.
      * @param autoScale
      *            when true, the encoder expects coordinates in the 0..255 range and will scale
      *             them automatically to the 0..extent-1 range before encoding.
      *            when false, the encoder expects coordinates in the 0..extent-1 range. 
      *            
      */
-    public VectorTileEncoder(int extent, int polygonClipBuffer, boolean autoScale) {
+    public VectorTileEncoder(int extent, int clipBuffer, boolean autoScale) {
         this.extent = extent;
         this.autoScale = autoScale;
 
         final int size = autoScale ? 256 : extent;
-        clipGeometry = createTileEnvelope(0, size);
-        polygonClipGeometry = createTileEnvelope(polygonClipBuffer, size);
+        clipGeometry = createTileEnvelope(clipBuffer, size);
     }
 
     private static Geometry createTileEnvelope(int buffer, int size) {        
@@ -138,22 +135,16 @@ public class VectorTileEncoder {
             return;
         }
 
-        // clip geometry. polygons right outside. other geometries at tile
-        // border.
+        // clip geometry.
         try {
-            if (geometry instanceof Polygon) {
-                Geometry original = geometry;
-                geometry = polygonClipGeometry.intersection(original);
+            Geometry original = geometry;
+            geometry = clipGeometry.intersection(original);
 
-                // some times a intersection is returned as an empty geometry.
-                // going via wkt fixes the problem.
-                if (geometry.isEmpty() && original.intersects(polygonClipGeometry)) {
-                    Geometry originalViaWkt = new WKTReader().read(original.toText());
-                    geometry = polygonClipGeometry.intersection(originalViaWkt);
-                }
-                
-            } else {
-                geometry = clipGeometry.intersection(geometry);
+            // some times a intersection is returned as an empty geometry.
+            // going via wkt fixes the problem.
+            if (geometry.isEmpty() && original.intersects(clipGeometry)) {
+                Geometry originalViaWkt = new WKTReader().read(original.toText());
+                geometry = clipGeometry.intersection(originalViaWkt);
             }
         } catch (TopologyException e) {
             // could not intersect. original geometry will be used instead.
