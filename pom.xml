@@ -4,7 +4,12 @@
   <groupId>no.ecc.vectortile</groupId>
   <artifactId>java-vector-tile</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.9-SNAPSHOT</version>
+  <version>1.0.8.1-SNAPSHOT</version>
+  <parent>
+    <groupId>se.hitta</groupId>
+    <artifactId>pom-base</artifactId>
+   <version>4.0.1</version>
+  </parent>
   <name>java-vector-tile</name>
   <url>http://maven.apache.org</url>
   
