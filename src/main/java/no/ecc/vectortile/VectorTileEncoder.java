@@ -153,7 +153,7 @@ public class VectorTileEncoder {
         }
 
         // if clipping result in MultiPolygon, then split once more
-        if (geometry instanceof MultiPolygon) {
+        if (geometry instanceof MultiPolygon || geometry.getClass().equals(GeometryCollection.class)) {
             splitAndAddFeatures(layerName, attributes, (GeometryCollection) geometry);
             return;
         }
